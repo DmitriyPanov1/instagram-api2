@@ -25,6 +25,7 @@ use function GuzzleHttp\Psr7\modify_request;
  */
 class Client
 {
+	
     /**
      * How frequently we're allowed to auto-save the cookie jar, in seconds.
      *
