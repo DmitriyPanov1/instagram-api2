@@ -2,44 +2,69 @@
 
 namespace InstagramAPI\Response\Model;
 
-use InstagramAPI\AutoPropertyHandler;
+use InstagramAPI\AutoPropertyMapper;
 
 /**
+ * ReelShare.
+ *
  * @method mixed getBroadcasts()
+ * @method bool getIsReelPersisted()
  * @method Item getMedia()
- * @method mixed getStickerVersion()
- * @method mixed getStoryRankingToken()
- * @method mixed getText()
+ * @method string getMentionedUserId()
+ * @method string getReelOwnerId()
+ * @method string getReelType()
+ * @method int getStickerVersion()
+ * @method string getStoryRankingToken()
+ * @method string getText()
  * @method Item[] getTray()
- * @method mixed getType()
+ * @method string getType()
  * @method bool isBroadcasts()
+ * @method bool isIsReelPersisted()
  * @method bool isMedia()
+ * @method bool isMentionedUserId()
+ * @method bool isReelOwnerId()
+ * @method bool isReelType()
  * @method bool isStickerVersion()
  * @method bool isStoryRankingToken()
  * @method bool isText()
  * @method bool isTray()
  * @method bool isType()
- * @method setBroadcasts(mixed $value)
- * @method setMedia(Item $value)
- * @method setStickerVersion(mixed $value)
- * @method setStoryRankingToken(mixed $value)
- * @method setText(mixed $value)
- * @method setTray(Item[] $value)
- * @method setType(mixed $value)
+ * @method $this setBroadcasts(mixed $value)
+ * @method $this setIsReelPersisted(bool $value)
+ * @method $this setMedia(Item $value)
+ * @method $this setMentionedUserId(string $value)
+ * @method $this setReelOwnerId(string $value)
+ * @method $this setReelType(string $value)
+ * @method $this setStickerVersion(int $value)
+ * @method $this setStoryRankingToken(string $value)
+ * @method $this setText(string $value)
+ * @method $this setTray(Item[] $value)
+ * @method $this setType(string $value)
+ * @method $this unsetBroadcasts()
+ * @method $this unsetIsReelPersisted()
+ * @method $this unsetMedia()
+ * @method $this unsetMentionedUserId()
+ * @method $this unsetReelOwnerId()
+ * @method $this unsetReelType()
+ * @method $this unsetStickerVersion()
+ * @method $this unsetStoryRankingToken()
+ * @method $this unsetText()
+ * @method $this unsetTray()
+ * @method $this unsetType()
  */
-class ReelShare extends AutoPropertyHandler
+class ReelShare extends AutoPropertyMapper
 {
-    /**
-     * @var Item[]
-     */
-    public $tray;
-    public $story_ranking_token;
-    public $broadcasts;
-    public $sticker_version;
-    public $text;
-    public $type;
-    /**
-     * @var Item
-     */
-    public $media;
+    const JSON_PROPERTY_MAP = [
+        'tray'                => 'Item[]',
+        'story_ranking_token' => 'string',
+        'broadcasts'          => '',
+        'sticker_version'     => 'int',
+        'text'                => 'string',
+        'type'                => 'string',
+        'is_reel_persisted'   => 'bool',
+        'reel_owner_id'       => 'string',
+        'reel_type'           => 'string',
+        'media'               => 'Item',
+        'mentioned_user_id'   => 'string',
+    ];
 }

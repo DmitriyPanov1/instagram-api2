@@ -2,32 +2,46 @@
 
 namespace InstagramAPI\Response;
 
-use InstagramAPI\AutoPropertyHandler;
-use InstagramAPI\ResponseInterface;
-use InstagramAPI\ResponseTrait;
+use InstagramAPI\Response;
 
 /**
- * @method Model\Groups[] getGroups()
+ * DiscoverPeopleResponse.
+ *
  * @method string getMaxId()
- * @method mixed getMoreAvailable()
- * @method bool isGroups()
+ * @method mixed getMessage()
+ * @method bool getMoreAvailable()
+ * @method Model\SuggestedUsers getNewSuggestedUsers()
+ * @method string getStatus()
+ * @method Model\SuggestedUsers getSuggestedUsers()
+ * @method Model\_Message[] get_Messages()
  * @method bool isMaxId()
+ * @method bool isMessage()
  * @method bool isMoreAvailable()
- * @method setGroups(Model\Groups[] $value)
- * @method setMaxId(string $value)
- * @method setMoreAvailable(mixed $value)
+ * @method bool isNewSuggestedUsers()
+ * @method bool isStatus()
+ * @method bool isSuggestedUsers()
+ * @method bool is_Messages()
+ * @method $this setMaxId(string $value)
+ * @method $this setMessage(mixed $value)
+ * @method $this setMoreAvailable(bool $value)
+ * @method $this setNewSuggestedUsers(Model\SuggestedUsers $value)
+ * @method $this setStatus(string $value)
+ * @method $this setSuggestedUsers(Model\SuggestedUsers $value)
+ * @method $this set_Messages(Model\_Message[] $value)
+ * @method $this unsetMaxId()
+ * @method $this unsetMessage()
+ * @method $this unsetMoreAvailable()
+ * @method $this unsetNewSuggestedUsers()
+ * @method $this unsetStatus()
+ * @method $this unsetSuggestedUsers()
+ * @method $this unset_Messages()
  */
-class DiscoverPeopleResponse extends AutoPropertyHandler implements ResponseInterface
+class DiscoverPeopleResponse extends Response
 {
-    use ResponseTrait;
-
-    /**
-     * @var Model\Groups[]
-     */
-    public $groups;
-    public $more_available;
-    /**
-     * @var string
-     */
-    public $max_id;
+    const JSON_PROPERTY_MAP = [
+        'more_available'      => 'bool',
+        'max_id'              => 'string',
+        'suggested_users'     => 'Model\SuggestedUsers',
+        'new_suggested_users' => 'Model\SuggestedUsers',
+    ];
 }

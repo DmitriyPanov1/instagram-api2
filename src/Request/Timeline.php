@@ -3,6 +3,8 @@
 namespace InstagramAPI\Request;
 
 use InstagramAPI\Constants;
+use InstagramAPI\Exception\InstagramException;
+use InstagramAPI\Exception\UploadFailedException;
 use InstagramAPI\Request\Metadata\Internal as InternalMetadata;
 use InstagramAPI\Response;
 use InstagramAPI\Utils;
@@ -54,15 +56,7 @@ class Timeline extends RequestCollection
         $videoFilename,
         array $externalMetadata = [])
     {
-
-		$internalMetadata = null;
-		
-		if (isset($externalMetadata['preview']) && ! empty($externalMetadata['preview'])) {
-			$internalMetadata = new InternalMetadata();
-			$internalMetadata->setVideoPreviewUrl($externalMetadata['preview']);
-		}
-
-        return $this->ig->internal->uploadSingleVideo(Constants::FEED_TIMELINE, $videoFilename, $internalMetadata, $externalMetadata);
+        return $this->ig->internal->uploadSingleVideo(Constants::FEED_TIMELINE, $videoFilename, null, $externalMetadata);
     }
 
     /**
@@ -118,6 +112,7 @@ class Timeline extends RequestCollection
 
             // If usertags are provided, verify that the entries are valid.
             if (isset($item['usertags'])) {
+                $item['usertags'] = ['in' => $item['usertags']];
                 Utils::throwIfInvalidUsertags($item['usertags']);
             }
 
@@ -145,14 +140,14 @@ class Timeline extends RequestCollection
 
             switch ($item['type']) {
             case 'photo':
-                $itemInternalMetadata->setPhotoUploadResponse($this->ig->internal->uploadPhotoData(Constants::FEED_TIMELINE_ALBUM, $itemInternalMetadata));
+                $this->ig->internal->uploadPhotoData(Constants::FEED_TIMELINE_ALBUM, $itemInternalMetadata);
                 break;
             case 'video':
                 // Attempt to upload the video data.
                 $itemInternalMetadata = $this->ig->internal->uploadVideo(Constants::FEED_TIMELINE_ALBUM, $item['file'], $itemInternalMetadata);
 
                 // Attempt to upload the thumbnail, associated with our video's ID.
-                $itemInternalMetadata->setPhotoUploadResponse($this->ig->internal->uploadPhotoData(Constants::FEED_TIMELINE_ALBUM, $itemInternalMetadata));
+                $this->ig->internal->uploadVideoThumbnail(Constants::FEED_TIMELINE_ALBUM, $itemInternalMetadata, ['thumbnail_timestamp' => (isset($media[$key]['thumbnail_timestamp'])) ? $media[$key]['thumbnail_timestamp'] : 0]);
             }
 
             $media[$key]['internalMetadata'] = $itemInternalMetadata;
@@ -161,13 +156,24 @@ class Timeline extends RequestCollection
         // Generate an uploadId (via internal metadata) for the album.
         $albumInternalMetadata = new InternalMetadata();
         // Configure the uploaded album and attach it to our timeline.
-        /** @var \InstagramAPI\Response\ConfigureResponse $configure */
-        $configure = $this->ig->internal->configureWithRetries(
-            'album',
-            function () use ($media, $albumInternalMetadata, $externalMetadata) {
-                return $this->ig->internal->configureTimelineAlbum($media, $albumInternalMetadata, $externalMetadata);
-            }
-        );
+        try {
+            /** @var \InstagramAPI\Response\ConfigureResponse $configure */
+            $configure = $this->ig->internal->configureWithRetries(
+                function () use ($media, $albumInternalMetadata, $externalMetadata) {
+                    return $this->ig->internal->configureTimelineAlbum($media, $albumInternalMetadata, $externalMetadata);
+                }
+            );
+        } catch (InstagramException $e) {
+            // Pass Instagram's error as is.
+            throw $e;
+        } catch (\Exception $e) {
+            // Wrap runtime errors.
+            throw new UploadFailedException(
+                sprintf('Upload of the album failed: %s', $e->getMessage()),
+                $e->getCode(),
+                $e
+            );
+        }
 
         return $configure;
     }
@@ -177,14 +183,21 @@ class Timeline extends RequestCollection
      *
      * This is the feed of recent timeline posts from people you follow.
      *
-     * @param null|string $maxId   Next "maximum ID", used for pagination.
-     * @param null|array  $options An associative array with following keys (all of them are optional):
-     *                             "latest_story_pk" The media ID in Instagram's internal format (ie "3482384834_43294").
-     *                             "seen_posts" One or more seen media IDs.
-     *                             "unseen_posts" One or more unseen media IDs.
-     *                             "is_pull_to_refresh" Whether this call was triggered by refresh.
-     *                             "push_disabled" Whether user has disabled PUSH.
-     *                             "recovered_from_crash" Whether app has recovered from crash.
+     * @param string|null $maxId   Next "maximum ID", used for pagination.
+     * @param array|null  $options An associative array with following keys (all
+     *                             of them are optional):
+     *                             "latest_story_pk" The media ID in Instagram's
+     *                             internal format (ie "3482384834_43294");
+     *                             "seen_posts" One or more seen media IDs;
+     *                             "unseen_posts" One or more unseen media IDs;
+     *                             "is_pull_to_refresh" Whether this call was
+     *                             triggered by a refresh;
+     *                             "push_disabled" Whether user has disabled
+     *                             PUSH;
+     *                             "recovered_from_crash" Whether the app has
+     *                             recovered from a crash/was killed by Android
+     *                             memory manager/force closed by user/just
+     *                             installed for the first time;
      *                             "feed_view_info" DON'T USE IT YET.
      *
      * @throws \InstagramAPI\Exception\InstagramException
@@ -195,8 +208,16 @@ class Timeline extends RequestCollection
         $maxId = null,
         array $options = null)
     {
+        $asyncAds = $this->ig->isExperimentEnabled(
+            'ig_android_ad_async_ads_universe',
+            'is_enabled'
+        );
+
         $request = $this->ig->request('feed/timeline/')
             ->setSignedPost(false)
+            ->setIsBodyCompressed(true)
+            //->addHeader('X-CM-Bandwidth-KBPS', '-1.000')
+            //->addHeader('X-CM-Latency', '0.000')
             ->addHeader('X-Ads-Opt-Out', '0')
             ->addHeader('X-Google-AD-ID', $this->ig->advertising_id)
             ->addHeader('X-DEVICE-ID', $this->ig->uuid)
@@ -204,17 +225,46 @@ class Timeline extends RequestCollection
             ->addPost('_uuid', $this->ig->uuid)
             ->addPost('is_prefetch', '0')
             ->addPost('phone_id', $this->ig->phone_id)
-            ->addPost('battery_level', '100')
-            ->addPost('is_charging', '1')
-            ->addPost('timezone_offset', date('Z'));
+            ->addPost('device_id', $this->ig->uuid)
+            ->addPost('client_session_id', $this->ig->session_id)
+            ->addPost('battery_level', mt_rand(25, 100))
+            ->addPost('is_charging', '0')
+            ->addPost('will_sound_on', '1')
+            ->addPost('is_on_screen', 'true')
+            ->addPost('timezone_offset', date('Z'))
+            ->addPost('is_async_ads_in_headload_enabled', (string) (int) ($asyncAds && $this->ig->isExperimentEnabled(
+                    'ig_android_ad_async_ads_universe',
+                    'is_async_ads_in_headload_enabled'
+                )))
+            ->addPost('is_async_ads_double_request', (string) (int) ($asyncAds && $this->ig->isExperimentEnabled(
+                'ig_android_ad_async_ads_universe',
+                'is_double_request_enabled'
+            )))
+            ->addPost('is_async_ads_rti', (string) (int) ($asyncAds && $this->ig->isExperimentEnabled(
+                'ig_android_ad_async_ads_universe',
+                'is_rti_enabled'
+            )))
+            ->addPost('rti_delivery_backend', (string) (int) $this->ig->getExperimentParam(
+                'ig_android_ad_async_ads_universe',
+                'rti_delivery_backend'
+            ));
 
         if (isset($options['latest_story_pk'])) {
             $request->addPost('latest_story_pk', $options['latest_story_pk']);
         }
 
-        if (isset($options['is_pull_to_refresh'])) {
-            $request->addPost('is_pull_to_refresh', $options['is_pull_to_refresh'] ? '1' : '0');
+        if ($maxId !== null) {
+            $request->addPost('reason', 'pagination');
+            $request->addPost('max_id', $maxId);
+            $request->addPost('is_pull_to_refresh', '0');
+        } elseif (!empty($options['is_pull_to_refresh'])) {
+            $request->addPost('reason', 'pull_to_refresh');
+            $request->addPost('is_pull_to_refresh', '1');
+        } elseif (isset($options['is_pull_to_refresh'])) {
+            $request->addPost('reason', 'warm_start_fetch');
+            $request->addPost('is_pull_to_refresh', '0');
         } else {
+            $request->addPost('reason', 'cold_start_fetch');
             $request->addPost('is_pull_to_refresh', '0');
         }
 
@@ -248,21 +298,12 @@ class Timeline extends RequestCollection
             $request->addPost('feed_view_info', '');
         }
 
-        if (isset($options['push_disabled']) && $options['push_disabled']) {
+        if (!empty($options['push_disabled'])) {
             $request->addPost('push_disabled', 'true');
         }
 
-        if (isset($options['recovered_from_crash']) && $options['recovered_from_crash']) {
+        if (!empty($options['recovered_from_crash'])) {
             $request->addPost('recovered_from_crash', '1');
-        }
-
-        if ($maxId) {
-            $request->addPost('max_id', $maxId);
-        } else {
-            $request->addHeader('X-IG-INSTALLED-APPS', base64_encode(json_encode([
-                '1' => 0, // com.instagram.boomerang
-                '2' => 0, // com.instagram.layout
-            ])));
         }
 
         return $request->getResponse(new Response\TimelineFeedResponse());
@@ -271,9 +312,8 @@ class Timeline extends RequestCollection
     /**
      * Get a user's timeline feed.
      *
-     * @param string      $userId       Numerical UserPK ID.
-     * @param null|string $maxId        Next "maximum ID", used for pagination.
-     * @param null|int    $minTimestamp Minimum timestamp.
+     * @param string      $userId Numerical UserPK ID.
+     * @param string|null $maxId  Next "maximum ID", used for pagination.
      *
      * @throws \InstagramAPI\Exception\InstagramException
      *
@@ -281,32 +321,32 @@ class Timeline extends RequestCollection
      */
     public function getUserFeed(
         $userId,
-        $maxId = null,
-        $minTimestamp = null)
+        $maxId = null)
     {
-        return $this->ig->request("feed/user/{$userId}/")
-            ->addParam('rank_token', $this->ig->rank_token)
-            ->addParam('ranked_content', 'true')
-            ->addParam('max_id', ($maxId !== null ? $maxId : ''))
-            ->addParam('min_timestamp', ($minTimestamp !== null ? $minTimestamp : ''))
-            ->getResponse(new Response\UserFeedResponse());
+        $request = $this->ig->request("feed/user/{$userId}/")
+            ->addParam('exclude_comment', true)
+            ->addParam('only_fetch_first_carousel_media', false);
+
+        if ($maxId !== null) {
+            $request->addParam('max_id', $maxId);
+        }
+
+        return $request->getResponse(new Response\UserFeedResponse());
     }
 
     /**
      * Get your own timeline feed.
      *
-     * @param null|string $maxId        Next "maximum ID", used for pagination.
-     * @param null|int    $minTimestamp Minimum timestamp.
+     * @param string|null $maxId Next "maximum ID", used for pagination.
      *
      * @throws \InstagramAPI\Exception\InstagramException
      *
      * @return \InstagramAPI\Response\UserFeedResponse
      */
     public function getSelfUserFeed(
-        $maxId = null,
-        $minTimestamp = null)
+        $maxId = null)
     {
-        return $this->getUserFeed($this->ig->account_id, $maxId, $minTimestamp);
+        return $this->getUserFeed($this->ig->account_id, $maxId);
     }
 
     /**
@@ -328,11 +368,10 @@ class Timeline extends RequestCollection
      * Marking media as "archived" will hide it from everyone except yourself.
      * You can unmark the media again at any time, to make it public again.
      *
-     * @param string     $mediaId   The media ID in Instagram's internal format (ie "3482384834_43294").
-     * @param string|int $mediaType The type of the media item you are deleting. One of: "PHOTO", "VIDEO"
-     *                              "ALBUM", or the raw value of the Item's "getMediaType()" function.
-     * @param bool       $onlyMe    If true, archives your media so that it's only visible to you.
-     *                              Otherwise, if false, makes the media public to everyone again.
+     * @param string $mediaId The media ID in Instagram's internal format (ie "3482384834_43294").
+     *                        "ALBUM", or the raw value of the Item's "getMediaType()" function.
+     * @param bool   $onlyMe  If true, archives your media so that it's only visible to you.
+     *                        Otherwise, if false, makes the media public to everyone again.
      *
      * @throws \InvalidArgumentException
      * @throws \InstagramAPI\Exception\InstagramException
@@ -341,29 +380,11 @@ class Timeline extends RequestCollection
      */
     public function archiveMedia(
         $mediaId,
-        $mediaType = 'PHOTO',
         $onlyMe = true)
     {
-        $mediaType = Utils::checkMediaType($mediaType);
-
         $endpoint = $onlyMe ? 'only_me' : 'undo_only_me';
-        switch ($mediaType) {
-        case 'PHOTO':
-            $mediaCode = 1;
-            break;
-        case 'VIDEO':
-            $mediaCode = 2;
-            break;
-        case 'ALBUM':
-            $mediaCode = 8;
-            break;
-        default:
-            throw new \InvalidArgumentException(sprintf('Unknown media type (%s).', $mediaType));
-            break;
-        }
 
         return $this->ig->request("media/{$mediaId}/{$endpoint}/")
-            ->addParam('media_type', $mediaCode)
             ->addPost('_uuid', $this->ig->uuid)
             ->addPost('_uid', $this->ig->account_id)
             ->addPost('_csrftoken', $this->ig->client->getToken())
@@ -413,7 +434,7 @@ class Timeline extends RequestCollection
             $mediaFiles = []; // Reset queue.
             foreach ($myTimeline->getItems() as $item) {
                 $itemDate = date('Y-m-d \a\t H.i.s O', $item->getTakenAt());
-                if ($item->media_type == Response\Model\Item::ALBUM) {
+                if ($item->getMediaType() == Response\Model\Item::CAROUSEL) {
                     // Albums contain multiple items which must all be queued.
                     // NOTE: We won't name them by their subitem's getIds, since
                     // those Ids have no meaning outside of the album and they
@@ -424,8 +445,8 @@ class Timeline extends RequestCollection
                     $subPosition = 0;
                     foreach ($item->getCarouselMedia() as $subItem) {
                         ++$subPosition;
-                        if ($subItem->media_type == Response\Model\CarouselMedia::PHOTO) {
-                            $mediaUrl = $subItem->getImageVersions2()->candidates[0]->getUrl();
+                        if ($subItem->getMediaType() == Response\Model\CarouselMedia::PHOTO) {
+                            $mediaUrl = $subItem->getImageVersions2()->getCandidates()[0]->getUrl();
                         } else {
                             $mediaUrl = $subItem->getVideoVersions()[0]->getUrl();
                         }
@@ -436,8 +457,8 @@ class Timeline extends RequestCollection
                         ];
                     }
                 } else {
-                    if ($item->media_type == Response\Model\Item::PHOTO) {
-                        $mediaUrl = $item->getImageVersions2()->candidates[0]->getUrl();
+                    if ($item->getMediaType() == Response\Model\Item::PHOTO) {
+                        $mediaUrl = $item->getImageVersions2()->getCandidates()[0]->getUrl();
                     } else {
                         $mediaUrl = $item->getVideoVersions()[0]->getUrl();
                     }
@@ -466,6 +487,9 @@ class Timeline extends RequestCollection
                     touch($filePath, $mediaInfo['taken_at']);
                 }
             }
-        } while (($nextMaxId = $myTimeline->getNextMaxId()) !== null);
+
+            // Update the page ID to point to the next page (if more available).
+            $nextMaxId = $myTimeline->getNextMaxId();
+        } while ($nextMaxId !== null);
     }
 }

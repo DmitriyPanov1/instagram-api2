@@ -2,65 +2,51 @@
 
 namespace InstagramAPI\Response;
 
-use InstagramAPI\AutoPropertyHandler;
-use InstagramAPI\ResponseInterface;
-use InstagramAPI\ResponseTrait;
+use InstagramAPI\Response;
 
 /**
- * @method mixed getAutoLoadMoreEnabled()
- * @method Model\Item[] getItems()
- * @method Model\Location getLocation()
- * @method mixed getMediaCount()
- * @method mixed getMoreAvailable()
+ * LocationFeedResponse.
+ *
+ * @method mixed getMessage()
+ * @method bool getMoreAvailable()
  * @method string getNextMaxId()
- * @method mixed getNumResults()
- * @method Model\Item[] getRankedItems()
- * @method Model\StoryTray getStory()
- * @method bool isAutoLoadMoreEnabled()
- * @method bool isItems()
- * @method bool isLocation()
- * @method bool isMediaCount()
+ * @method int[] getNextMediaIds()
+ * @method int getNextPage()
+ * @method Model\Section[] getSections()
+ * @method string getStatus()
+ * @method Model\_Message[] get_Messages()
+ * @method bool isMessage()
  * @method bool isMoreAvailable()
  * @method bool isNextMaxId()
- * @method bool isNumResults()
- * @method bool isRankedItems()
- * @method bool isStory()
- * @method setAutoLoadMoreEnabled(mixed $value)
- * @method setItems(Model\Item[] $value)
- * @method setLocation(Model\Location $value)
- * @method setMediaCount(mixed $value)
- * @method setMoreAvailable(mixed $value)
- * @method setNextMaxId(string $value)
- * @method setNumResults(mixed $value)
- * @method setRankedItems(Model\Item[] $value)
- * @method setStory(Model\StoryTray $value)
+ * @method bool isNextMediaIds()
+ * @method bool isNextPage()
+ * @method bool isSections()
+ * @method bool isStatus()
+ * @method bool is_Messages()
+ * @method $this setMessage(mixed $value)
+ * @method $this setMoreAvailable(bool $value)
+ * @method $this setNextMaxId(string $value)
+ * @method $this setNextMediaIds(int[] $value)
+ * @method $this setNextPage(int $value)
+ * @method $this setSections(Model\Section[] $value)
+ * @method $this setStatus(string $value)
+ * @method $this set_Messages(Model\_Message[] $value)
+ * @method $this unsetMessage()
+ * @method $this unsetMoreAvailable()
+ * @method $this unsetNextMaxId()
+ * @method $this unsetNextMediaIds()
+ * @method $this unsetNextPage()
+ * @method $this unsetSections()
+ * @method $this unsetStatus()
+ * @method $this unset_Messages()
  */
-class LocationFeedResponse extends AutoPropertyHandler implements ResponseInterface
+class LocationFeedResponse extends Response
 {
-    use ResponseTrait;
-
-    public $media_count;
-    public $num_results;
-    public $auto_load_more_enabled;
-    /**
-     * @var Model\Item[]
-     */
-    public $items;
-    /**
-     * @var Model\Item[]
-     */
-    public $ranked_items;
-    public $more_available;
-    /**
-     * @var Model\StoryTray
-     */
-    public $story;
-    /**
-     * @var Model\Location
-     */
-    public $location;
-    /**
-     * @var string
-     */
-    public $next_max_id;
+    const JSON_PROPERTY_MAP = [
+        'sections'               => 'Model\Section[]',
+        'next_page'              => 'int',
+        'more_available'         => 'bool',
+        'next_media_ids'         => 'int[]',
+        'next_max_id'            => 'string',
+    ];
 }

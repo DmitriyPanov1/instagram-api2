@@ -2,71 +2,129 @@
 
 namespace InstagramAPI\Response\Model;
 
-use InstagramAPI\AutoPropertyHandler;
+use InstagramAPI\AutoPropertyMapper;
 
 /**
+ * DirectThreadItem.
+ *
  * @method ActionLog getActionLog()
- * @method mixed getClientContext()
+ * @method AnimatedMedia getAnimatedMedia()
+ * @method string getClientContext()
+ * @method MediaShare getDirectMediaShare()
  * @method DirectExpiringSummary getExpiringMediaActionSummary()
+ * @method FelixShare getFelixShare()
  * @method mixed getHideInThread()
  * @method string getItemId()
  * @method mixed getItemType()
  * @method mixed getLike()
  * @method DirectLink getLink()
- * @method mixed getLiveVideoShare()
+ * @method LiveVideoShare getLiveVideoShare()
+ * @method LiveViewerInvite getLiveViewerInvite()
  * @method Location getLocation()
  * @method DirectThreadItemMedia getMedia()
  * @method Item getMediaShare()
  * @method Placeholder getPlaceholder()
+ * @method Item[] getPreviewMedias()
+ * @method ProductShare getProductShare()
+ * @method User getProfile()
  * @method Item getRavenMedia()
  * @method DirectReactions getReactions()
  * @method ReelShare getReelShare()
- * @method array getSeenUserIds()
- * @method mixed getText()
+ * @method string[] getSeenUserIds()
+ * @method StoryShare getStoryShare()
+ * @method string getText()
  * @method mixed getTimestamp()
  * @method string getUserId()
+ * @method VideoCallEvent getVideoCallEvent()
  * @method bool isActionLog()
+ * @method bool isAnimatedMedia()
  * @method bool isClientContext()
+ * @method bool isDirectMediaShare()
  * @method bool isExpiringMediaActionSummary()
+ * @method bool isFelixShare()
  * @method bool isHideInThread()
  * @method bool isItemId()
  * @method bool isItemType()
  * @method bool isLike()
  * @method bool isLink()
  * @method bool isLiveVideoShare()
+ * @method bool isLiveViewerInvite()
  * @method bool isLocation()
  * @method bool isMedia()
  * @method bool isMediaShare()
  * @method bool isPlaceholder()
+ * @method bool isPreviewMedias()
+ * @method bool isProductShare()
+ * @method bool isProfile()
  * @method bool isRavenMedia()
  * @method bool isReactions()
  * @method bool isReelShare()
  * @method bool isSeenUserIds()
+ * @method bool isStoryShare()
  * @method bool isText()
  * @method bool isTimestamp()
  * @method bool isUserId()
- * @method setActionLog(ActionLog $value)
- * @method setClientContext(mixed $value)
- * @method setExpiringMediaActionSummary(DirectExpiringSummary $value)
- * @method setHideInThread(mixed $value)
- * @method setItemId(string $value)
- * @method setItemType(mixed $value)
- * @method setLike(mixed $value)
- * @method setLink(DirectLink $value)
- * @method setLiveVideoShare(mixed $value)
- * @method setLocation(Location $value)
- * @method setMedia(DirectThreadItemMedia $value)
- * @method setMediaShare(Item $value)
- * @method setPlaceholder(Placeholder $value)
- * @method setRavenMedia(Item $value)
- * @method setReactions(DirectReactions $value)
- * @method setReelShare(ReelShare $value)
- * @method setSeenUserIds(array $value)
- * @method setText(mixed $value)
- * @method setTimestamp(mixed $value)
- * @method setUserId(string $value)
+ * @method bool isVideoCallEvent()
+ * @method $this setActionLog(ActionLog $value)
+ * @method $this setAnimatedMedia(AnimatedMedia $value)
+ * @method $this setClientContext(string $value)
+ * @method $this setDirectMediaShare(MediaShare $value)
+ * @method $this setExpiringMediaActionSummary(DirectExpiringSummary $value)
+ * @method $this setFelixShare(FelixShare $value)
+ * @method $this setHideInThread(mixed $value)
+ * @method $this setItemId(string $value)
+ * @method $this setItemType(mixed $value)
+ * @method $this setLike(mixed $value)
+ * @method $this setLink(DirectLink $value)
+ * @method $this setLiveVideoShare(LiveVideoShare $value)
+ * @method $this setLiveViewerInvite(LiveViewerInvite $value)
+ * @method $this setLocation(Location $value)
+ * @method $this setMedia(DirectThreadItemMedia $value)
+ * @method $this setMediaShare(Item $value)
+ * @method $this setPlaceholder(Placeholder $value)
+ * @method $this setPreviewMedias(Item[] $value)
+ * @method $this setProductShare(ProductShare $value)
+ * @method $this setProfile(User $value)
+ * @method $this setRavenMedia(Item $value)
+ * @method $this setReactions(DirectReactions $value)
+ * @method $this setReelShare(ReelShare $value)
+ * @method $this setSeenUserIds(string[] $value)
+ * @method $this setStoryShare(StoryShare $value)
+ * @method $this setText(string $value)
+ * @method $this setTimestamp(mixed $value)
+ * @method $this setUserId(string $value)
+ * @method $this setVideoCallEvent(VideoCallEvent $value)
+ * @method $this unsetActionLog()
+ * @method $this unsetAnimatedMedia()
+ * @method $this unsetClientContext()
+ * @method $this unsetDirectMediaShare()
+ * @method $this unsetExpiringMediaActionSummary()
+ * @method $this unsetFelixShare()
+ * @method $this unsetHideInThread()
+ * @method $this unsetItemId()
+ * @method $this unsetItemType()
+ * @method $this unsetLike()
+ * @method $this unsetLink()
+ * @method $this unsetLiveVideoShare()
+ * @method $this unsetLiveViewerInvite()
+ * @method $this unsetLocation()
+ * @method $this unsetMedia()
+ * @method $this unsetMediaShare()
+ * @method $this unsetPlaceholder()
+ * @method $this unsetPreviewMedias()
+ * @method $this unsetProductShare()
+ * @method $this unsetProfile()
+ * @method $this unsetRavenMedia()
+ * @method $this unsetReactions()
+ * @method $this unsetReelShare()
+ * @method $this unsetSeenUserIds()
+ * @method $this unsetStoryShare()
+ * @method $this unsetText()
+ * @method $this unsetTimestamp()
+ * @method $this unsetUserId()
+ * @method $this unsetVideoCallEvent()
  */
-class DirectThreadItem extends AutoPropertyHandler
+class DirectThreadItem extends AutoPropertyMapper
 {
     const PLACEHOLDER = 'placeholder';
     const TEXT = 'text';
@@ -80,65 +138,42 @@ class DirectThreadItem extends AutoPropertyHandler
     const ACTION_LOG = 'action_log';
     const REACTION = 'reaction';
     const REEL_SHARE = 'reel_share';
+    const STORY_SHARE = 'story_share';
     const LINK = 'link';
+    const LIVE_VIDEO_SHARE = 'live_video_share';
+    const LIVE_VIEWER_INVITE = 'live_viewer_invite';
+    const PRODUCT_SHARE = 'product_share';
+    const VIDEO_CALL_EVENT = 'video_call_event';
 
-    /**
-     * @var string
-     */
-    public $item_id;
-    public $item_type;
-    public $text;
-    /**
-     * @var Item
-     */
-    public $media_share;
-    /**
-     * @var DirectThreadItemMedia
-     */
-    public $media;
-    /**
-     * @var string
-     */
-    public $user_id;
-    public $timestamp;
-    public $client_context;
-    public $hide_in_thread;
-    /**
-     * @var ActionLog
-     */
-    public $action_log;
-    /**
-     * @var DirectLink
-     */
-    public $link;
-    /**
-     * @var DirectReactions
-     */
-    public $reactions;
-    /**
-     * @var Item
-     */
-    public $raven_media;
-    /**
-     * @var array
-     */
-    public $seen_user_ids;
-    /**
-     * @var DirectExpiringSummary
-     */
-    public $expiring_media_action_summary;
-    /**
-     * @var ReelShare
-     */
-    public $reel_share;
-    /**
-     * @var Placeholder
-     */
-    public $placeholder;
-    /**
-     * @var Location
-     */
-    public $location;
-    public $like;
-    public $live_video_share;
+    const JSON_PROPERTY_MAP = [
+        'item_id'                       => 'string',
+        'item_type'                     => '',
+        'text'                          => 'string',
+        'media_share'                   => 'Item',
+        'preview_medias'                => 'Item[]',
+        'media'                         => 'DirectThreadItemMedia',
+        'user_id'                       => 'string',
+        'timestamp'                     => '',
+        'client_context'                => 'string',
+        'hide_in_thread'                => '',
+        'action_log'                    => 'ActionLog',
+        'link'                          => 'DirectLink',
+        'reactions'                     => 'DirectReactions',
+        'raven_media'                   => 'Item',
+        'seen_user_ids'                 => 'string[]',
+        'expiring_media_action_summary' => 'DirectExpiringSummary',
+        'reel_share'                    => 'ReelShare',
+        'placeholder'                   => 'Placeholder',
+        'location'                      => 'Location',
+        'like'                          => '',
+        'live_video_share'              => 'LiveVideoShare',
+        'live_viewer_invite'            => 'LiveViewerInvite',
+        'profile'                       => 'User',
+        'story_share'                   => 'StoryShare',
+        'direct_media_share'            => 'MediaShare',
+        'video_call_event'              => 'VideoCallEvent',
+        'product_share'                 => 'ProductShare',
+        'animated_media'                => 'AnimatedMedia',
+        'felix_share'                   => 'FelixShare',
+    ];
 }

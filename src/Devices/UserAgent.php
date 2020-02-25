@@ -16,28 +16,22 @@ class UserAgent
      *
      * @var string
      */
-    const USER_AGENT_FORMAT = 'Instagram %s Android (%s/%s; %s; %s; %s; %s; %s; %s; %s)';
+    const USER_AGENT_FORMAT = 'Instagram %s Android (%s/%s; %s; %s; %s; %s; %s; %s; %s; %s)';
 
     /**
-     * Generates a User Agent string from a Device.
+     * Generates a User Agent string from a DeviceInterface.
      *
-     * @param string $appVersion Instagram client app version.
-     * @param string $userLocale The user's locale, such as "en_US".
-     * @param Device $device
-     *
-     * @throws \InvalidArgumentException If the device parameter is invalid.
+     * @param string          $appVersion Instagram client app version.
+     * @param string          $userLocale The user's locale, such as "en_US".
+     * @param DeviceInterface $device
      *
      * @return string
      */
     public static function buildUserAgent(
         $appVersion,
         $userLocale,
-        Device $device)
+        DeviceInterface $device)
     {
-        if (!$device instanceof Device) {
-            throw new \InvalidArgumentException('The device parameter must be a Device class instance.');
-        }
-
         // Build the appropriate "Manufacturer" or "Manufacturer/Brand" string.
         $manufacturerWithBrand = $device->getManufacturer();
         if ($device->getBrand() !== null) {
@@ -47,7 +41,7 @@ class UserAgent
         // Generate the final User-Agent string.
         return sprintf(
             self::USER_AGENT_FORMAT,
-            $appVersion, // App version ("10.8.0").
+            $appVersion, // App version ("27.0.0.7.97").
             $device->getAndroidVersion(),
             $device->getAndroidRelease(),
             $device->getDPI(),
@@ -56,7 +50,8 @@ class UserAgent
             $device->getModel(),
             $device->getDevice(),
             $device->getCPU(),
-            $userLocale // Locale ("en_US").
+            $userLocale, // Locale ("en_US").
+            Constants::VERSION_CODE
         );
     }
 
@@ -71,7 +66,7 @@ class UserAgent
         $string)
     {
         $result = '';
-        for ($i = 0; $i < strlen($string); $i++) {
+        for ($i = 0; $i < strlen($string); ++$i) {
             $char = $string[$i];
             if ($char === '&') {
                 $result .= '&amp;';
@@ -87,13 +82,13 @@ class UserAgent
     }
 
     /**
-     * Generates a FB User Agent string from a Device.
+     * Generates a FB User Agent string from a DeviceInterface.
      *
-     * @param string $appName     Application name.
-     * @param string $appVersion  Instagram client app version.
-     * @param string $versionCode Instagram client app version code.
-     * @param string $userLocale  The user's locale, such as "en_US".
-     * @param Device $device
+     * @param string          $appName     Application name.
+     * @param string          $appVersion  Instagram client app version.
+     * @param string          $versionCode Instagram client app version code.
+     * @param string          $userLocale  The user's locale, such as "en_US".
+     * @param DeviceInterface $device
      *
      * @throws \InvalidArgumentException If the device parameter is invalid.
      *
@@ -104,7 +99,7 @@ class UserAgent
         $appVersion,
         $versionCode,
         $userLocale,
-        Device $device)
+        DeviceInterface $device)
     {
         list($width, $height) = explode('x', $device->getResolution());
         $density = round(str_replace('dpi', '', $device->getDPI()) / 160, 1);
@@ -120,6 +115,7 @@ class UserAgent
             'FBPN' => Constants::PACKAGE_NAME,
             'FBDV' => self::_escapeFbString($device->getModel()),
             'FBSV' => self::_escapeFbString($device->getAndroidRelease()),
+            'FBLR' => 0, // android.hardware.ram.low
             'FBBK' => 1, // Const (at least in 10.12.0).
             'FBCA' => self::_escapeFbString(GoodDevices::CPU_ABI),
         ];

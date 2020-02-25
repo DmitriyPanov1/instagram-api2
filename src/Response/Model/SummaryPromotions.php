@@ -2,24 +2,24 @@
 
 namespace InstagramAPI\Response\Model;
 
-use InstagramAPI\AutoPropertyHandler;
+use InstagramAPI\AutoPropertyMapper;
 
 /**
- * @method BusinessEdges[] getEdges()
- * @method BusinessPageInfo getPageInfo()
+ * SummaryPromotions.
+ *
+ * @method BusinessEdge[] getEdges()
+ * @method PageInfo getPageInfo()
  * @method bool isEdges()
  * @method bool isPageInfo()
- * @method setEdges(BusinessEdges[] $value)
- * @method setPageInfo(BusinessPageInfo $value)
+ * @method $this setEdges(BusinessEdge[] $value)
+ * @method $this setPageInfo(PageInfo $value)
+ * @method $this unsetEdges()
+ * @method $this unsetPageInfo()
  */
-class SummaryPromotions extends AutoPropertyHandler
+class SummaryPromotions extends AutoPropertyMapper
 {
-    /**
-     * @var BusinessEdges[]
-     */
-    public $edges;
-    /**
-     * @var BusinessPageInfo
-     */
-    public $page_info;
+    const JSON_PROPERTY_MAP = [
+        'edges'     => 'BusinessEdge[]',
+        'page_info' => 'PageInfo',
+    ];
 }
